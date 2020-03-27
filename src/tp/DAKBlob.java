@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.guntram;
+package tp;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,7 +17,7 @@ import java.util.List;
  *
  * @author gbl
  */
-public class D7CBlob {
+public class DAKBlob {
     private final int maxXorLength=21000;
     private final int length;
     private final byte data[];
@@ -34,7 +34,7 @@ public class D7CBlob {
     private int paletteStart;
     private int paletteRemap;
     
-    public D7CBlob(File file) throws FileNotFoundException, IOException {
+    public DAKBlob(File file) throws FileNotFoundException, IOException {
         length=(int) file.length();
         data=new byte[length];
         haveFirstDecryptionNumber=false;
@@ -267,7 +267,7 @@ public class D7CBlob {
         }
     }
     
-    public D7CColor getColor(int index) {
+    public DAKColor getColor(int index) {
         initDataBlocks();
         return new D7CColor(data, paletteStart+index*25);
     }

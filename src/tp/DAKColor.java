@@ -3,15 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.guntram;
+package tp;
 
 /**
  *
  * @author gbl
  */
-public class D7CColor {
+public class DAKColor {
     byte n, r, g, b;
-    D7CColor(byte[] blob, int startpos) {
+    DAKColor(byte[] blob, int startpos) {
         n=blob[startpos];
         r=blob[startpos+6];
         g=blob[startpos+7];

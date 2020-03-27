@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.guntram;
+package tp;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -14,7 +14,7 @@ import javax.imageio.ImageIO;
  *
  * @author gbl
  */
-public class D7CReader {
+public class DAKReader {
 
     /**
      * @param args the command line arguments
@@ -25,7 +25,7 @@ public class D7CReader {
             filename=args[0];
         else
             filename="sterne.stp";
-        D7CBlob blob=new D7CBlob(new File(filename));
+        DAKBlob blob=new DAKBlob(new File(filename));
         blob.setDebugging(false);
         System.out.println("Stitch color map");
         byte[] pixels=blob.getDataBlock1Pixels();

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.guntram;
+package tp;
 
 import java.util.Arrays;
 
@@ -11,16 +11,16 @@ import java.util.Arrays;
  *
  * @author gbl
  */
-public class D7CVarLenDataBlock {
+public class DAKVarLenDataBlock {
     private final int height;
     private final int nbytes;
     private final byte[] data;
     
-    D7CVarLenDataBlock(byte[] buffer, int startpos) {
+    DAKVarLenDataBlock(byte[] buffer, int startpos) {
         this(buffer, startpos, null);
     }
     
-    D7CVarLenDataBlock(byte[] buffer, int startpos, byte[] xorkey) {
+    DAKVarLenDataBlock(byte[] buffer, int startpos, byte[] xorkey) {
         height=getWordAt(buffer, startpos);
         nbytes=getWordAt(buffer, startpos+2);
         if (xorkey != null) {

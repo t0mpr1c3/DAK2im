@@ -26,8 +26,8 @@ command line; without any parameters, the name sterne.stp is assumed (which I us
 
 If you have no idea of how to compile and use Java:
 - install a java SDK (Software Development Kit), the JRE (Java Runtime Environment) is not enough as it doesn't include a compiler.
-- Once installed, run `javac src/DAK*.java` to compile the .java files to class files.
-- Run `java -cp src DAKReader <filename.stp|pat>`
+- Once installed, run `javac src/tp/DAK*.java` to compile the .java files to class files.
+- Run `java -cp src tp.DAKReader <filename.stp|pat>`
 - This will produce a <filename.png> image file which you can check out using
 any image viewer.
 - Repeat with other filenames to convert more files (you only need to compile once).
