@@ -3,7 +3,7 @@
 This is a small program used to explore the contents of STP and PAT files, which are used for knitting patterns. The code for STP files was written by Guntram Blohm in response to a stackexchange question (https://reverseengineering.stackexchange.com/questions/12235/reading-stp-designaknit-stitch-pattern-files-ii/12239#12239).
 
 As .stp files are somewhat encrypted, it's not easily possible to read or convert them to anything else. 
-The original intention of this software was to show how to read and decrypt those files.
+The original intention of this software was to show how to read and decrypt those files. The older .pat file format is essentially the same but without any encryption.
 
 The program reads three kinds of data from the .stp file:
 
