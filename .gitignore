@@ -3,3 +3,5 @@ manifest.mf
 dist
 nbproject
 /build/
+/__pycache__
+/data

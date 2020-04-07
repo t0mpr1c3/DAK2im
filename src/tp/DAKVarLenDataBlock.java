@@ -8,7 +8,6 @@ package tp;
 import java.util.Arrays;
 
 /**
- *
  * @author gbl
  */
 public class DAKVarLenDataBlock {

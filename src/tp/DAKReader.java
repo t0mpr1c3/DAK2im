@@ -11,51 +11,62 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 /**
- *
- * @author gbl
+ * @author gbl, t0mpr1c3
  */
 public class DAKReader {
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) throws IOException {
-        String filename;
-        if (args.length>=1)
-            filename=args[0];
+    private String filename;
+    private DAKBlob blob;
+
+    public DAKReader(String filename) throws IllegalArgumentException, IOException {
+        this.filename=filename;
+        this.blob=makeBlob();
+    }
+
+    public DAKBlob makeBlob() throws IllegalArgumentException, IOException {
+        int dot=filename.lastIndexOf('.');
+        String suffix=filename.substring(dot+1,filename.length());
+        Boolean stp=suffix.equals("stp");
+        Boolean pat=suffix.equals("pat");
+        File file=new File(filename);
+        if (stp)
+            return new STPBlob(file);
+        else if (pat)
+            return new PATBlob(file);
         else
-            filename="sterne.stp";
-        DAKBlob blob=new DAKBlob(new File(filename));
+            throw new IllegalArgumentException("Filename must have .stp or .pat suffix");
+    }
+
+    public void read() {
         blob.setDebugging(false);
         System.out.println("Stitch color map");
-        byte[] pixels=blob.getDataBlock1Pixels();
+        byte[] pixels=blob.getDataBlock1Pixels(blob.getPatternXorKey());
         int pos;
         for (int i=0; i<blob.getHeight(); i++) {
             pos=(blob.getHeight()-i-1)*blob.getWidth();
-            for (int j=0; j<blob.getWidth(); j++) 
+            for (int j=0; j<blob.getWidth(); j++)
                 System.out.print((char)pixels[pos++]);
             System.out.println();
         }
         System.out.println("Color map");
         for (int i=32; i<75; i++) {
-            System.out.println("'"+(char)i+"': "+blob.getColor(i).toString());
+            System.out.println("'"+(char)i+"': "+blob.getColor(i,blob.getPatternXorKey()).toString());
         }
         System.out.println("Stitch type map, decoding not completed");
-        pixels=blob.getDataBlock2Pixels();
+        pixels=blob.getDataBlock2Pixels(blob.getPatternXorKey());
         for (int i=0; i<blob.getHeight(); i++) {
             pos=(blob.getHeight()-i-1)*blob.getWidth();
             for (int j=0; j<blob.getWidth(); j++) 
                 System.out.print((char)pixels[pos++]);
             System.out.println();
         }
-        
-        BufferedImage canvas = new BufferedImage(blob.getWidth(), blob.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
-        pixels=blob.getDataBlock1Pixels();
+        BufferedImage canvas=new BufferedImage(blob.getWidth(), blob.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
+        pixels=blob.getDataBlock1Pixels(blob.getPatternXorKey());
         for (int i=0; i<blob.getWidth(); i++) {
             for (int j=0; j<blob.getHeight(); j++) {
-                int pixelPos = (blob.getHeight() - j - 1)*blob.getWidth() + i;
+                int pixelPos = (blob.getHeight()-j-1)*blob.getWidth()+i;
                 int pixel = pixels[pixelPos];
-                D7CColor color = blob.getColor(pixel);
+                DAKColor color = blob.getColor(pixel,blob.getPatternXorKey());
                 canvas.setRGB(i, j, color.getR()<<16 | color.getG()<<8 | color.getB());
             }
         }

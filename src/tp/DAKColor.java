@@ -6,7 +6,6 @@
 package tp;
 
 /**
- *
  * @author gbl
  */
 public class DAKColor {

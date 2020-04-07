@@ -14,45 +14,48 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
  * @author gbl
  */
-public class DAKBlob {
-    private final int maxXorLength=21000;
-    private final int length;
-    private final byte data[];
-    private boolean debugging;
+public abstract class DAKBlob {
+    protected int maxXorLength=21000;
+    protected int length;
+    protected byte data[];
+    protected byte header[];
+    protected boolean debugging;
+    protected List<DAKVarLenDataBlock> firstBlocks, secondBlocks;
+    protected boolean dataBlocksInitialized;
+    protected boolean haveFirstDecryptionNumber;  protected int firstDecryptionNumber;
+    protected boolean haveFirstKeyString;         protected String firstKeyString;
+    protected boolean haveSecondDecryptionNumber; protected int secondDecryptionNumber;
+    protected boolean haveSecondKeyString;        protected String secondKeyString;
+    protected boolean haveXorKey;                 protected byte xorKey[];
+    protected int paletteStart;
+    protected int paletteRemap;
     
-    private boolean haveFirstDecryptionNumber;  private int firstDecryptionNumber;
-    private boolean haveFirstKeyString;         private String firstKeyString;
-    private boolean haveSecondDecryptionNumber; private int secondDecryptionNumber;
-    private boolean haveSecondKeyString;        private String secondKeyString;
-    private boolean haveXorKey;                 private byte xorKey[];
-    
-    private boolean dataBlocksInitialized;
-    private List<D7CVarLenDataBlock> firstBlocks, secondBlocks;
-    private int paletteStart;
-    private int paletteRemap;
-    
-    public DAKBlob(File file) throws FileNotFoundException, IOException {
-        length=(int) file.length();
-        data=new byte[length];
-        haveFirstDecryptionNumber=false;
-        haveFirstKeyString=false;
-        haveSecondDecryptionNumber=false;
-        haveSecondKeyString=false;
-        haveXorKey=false;
-        dataBlocksInitialized=false;
-        debugging=false;
-        try (InputStream reader = new FileInputStream(file)) {
-            int pos=0, n;
+    public DAKBlob(File file) throws IOException {
+        this.length=(int) file.length();
+        this.data=new byte[length];
+        this.dataBlocksInitialized=false;
+        this.debugging=false;
+        this.haveFirstDecryptionNumber=false;
+        this.haveFirstKeyString=false;
+        this.haveSecondDecryptionNumber=false;
+        this.haveSecondKeyString=false;
+        this.haveXorKey=false;
+        try (InputStream reader=new FileInputStream(file)) {
+            this.header=readHeader(reader);
+            int pos=3, n;
             while (pos<length) {
-                n=reader.read(data, pos, length-pos);
+                n=reader.read(data, pos, this.length-pos);
                 if (n<=0) {
+                    System.out.printf("length %d\n", this.length);
+                    System.out.printf("pos %d\n", pos);
                     throw new IOException("End of File reached before reading enough bytes");
                 }
                 pos+=n;
             }
+        } catch (FileNotFoundException ex) {
+            throw(ex);
         }
     }
     
@@ -67,16 +70,22 @@ public class DAKBlob {
     public int getWidth() {
         return getWordAt(3);
     }
+
+    public byte[] readHeader(InputStream f) throws IOException {
+        byte[] header=new byte [3];
+        int headerRead=f.read(header,0,3);
+        return header;
+    }
     
-    private int getByteAt(int pos) {
+    protected int getByteAt(int pos) {
         return (data[pos]&0xff);
     }
     
-    private int getWordAt(int pos) {
+    protected int getWordAt(int pos) {
         return getByteAt(pos) | (getByteAt(pos+1)<<8);
     }
     
-    private int getDwordAt(int pos) {
+    protected int getDwordAt(int pos) {
         return getByteAt(pos) |
                 (getByteAt(pos+1)<<8) |
                 (getByteAt(pos+2)<<16) |
@@ -84,7 +93,7 @@ public class DAKBlob {
     }
     
     /* Pascal strings! */
-    private String getStringAt(int pos) {
+    protected String getStringAt(int pos) {
         int size=getByteAt(pos);
         char[] chars=new char[size];
         for (int i=0; i<size; i++) {
@@ -93,121 +102,18 @@ public class DAKBlob {
         return new String(chars);
     }
     
-    private void debug(int val) { if (debugging) System.out.println(Integer.toHexString(val)); }
-    private void debug(String s, int val) { if (debugging) System.out.println(s+": "+Integer.toHexString(val)); }
-    private void debug(String s, String t) { if (debugging) System.out.println(s+": "+t); }
+    public void debug(int val) { if (debugging) System.out.println(Integer.toHexString(val)); }
+    public void debug(String s, int val) { if (debugging) System.out.println(s+": "+Integer.toHexString(val)); }
+    public void debug(String s, String t) { if (debugging) System.out.println(s+": "+t); }    
 
-    private int getFirstDecryptionNumber() {
-        if (!haveFirstDecryptionNumber) {
-            int temp;
-            firstDecryptionNumber=getDwordAt(0x35)/2; debug(firstDecryptionNumber);
-            temp=getByteAt(0x3f)*4;                   debug(temp); firstDecryptionNumber+=temp; debug(firstDecryptionNumber);
-            temp=getDwordAt(0x39);                    debug(temp); firstDecryptionNumber+=temp; debug(firstDecryptionNumber);
-            temp=getWordAt(0x3d);                     debug(temp); firstDecryptionNumber+=temp; debug(firstDecryptionNumber);
-            temp=getByteAt(0x20);                     debug(temp); firstDecryptionNumber+=temp; debug(firstDecryptionNumber);
-            haveFirstDecryptionNumber=true;
-        }
-        return firstDecryptionNumber;
-    }
-    
-    private String getFirstKeyString() {
-        if (!haveFirstKeyString) {
-            firstKeyString=new String();
-            firstKeyString+=getStringAt(0x60);
-            firstKeyString+=getStringAt(0x41);
-            firstKeyString+=getWordAt(0x3d);
-            firstKeyString+=getByteAt(0x20);
-            firstKeyString+=getStringAt(0x41);
-            firstKeyString+=getByteAt(0x20);
-            firstKeyString+=getWordAt(0x3d);
-            debug("First Key String", firstKeyString);
-            haveFirstKeyString=true;
-        }
-        
-        return firstKeyString;
-    }
-    
-    private int getSecondDecryptionNumber() {
-        if (!haveSecondDecryptionNumber) {
-            int salt1=getWordAt(0x39);
-            int salt2=(getDwordAt(0x35)&0xfff)>0 ? 1 : 0;
-            secondDecryptionNumber=getFirstDecryptionNumber();
-            String tempString=getFirstKeyString();
-            for (int i=0; i<tempString.length(); i++) {
-                byte b=(byte)(tempString.charAt(i)/2);
-                switch (i%3) {
-                    // Warning: The original disassembly has these 1-indexed, as
-                    // they use pascal strings there. We use 0-indexed. So be
-                    // careful when comparing these case statements to the original
-                    // ones.
-                    case 0:
-                        int temp=b/5*getWordAt(0x3f);
-                        secondDecryptionNumber+=(i+1)*salt2;
-                        secondDecryptionNumber+=b*6;
-                        secondDecryptionNumber+=temp;
-                        debug("after type 0", secondDecryptionNumber);
-                        break;
-                    case 1:
-                        secondDecryptionNumber+=(i+1)*salt1;
-                        secondDecryptionNumber+=b*4;
-                        debug("after type 1", secondDecryptionNumber);
-                        break;
-                    case 2:
-                        temp=(salt2+b)/7;
-                        secondDecryptionNumber+=(i+1)*b+temp;
-                        debug("after type 2", secondDecryptionNumber);
-                        break;
-                }
-            }
-            debug("calculated 2nd number", secondDecryptionNumber);
-            haveSecondDecryptionNumber=true;
-        }
-        return secondDecryptionNumber;
-    }
-    
-    private String getSecondKeyString() {
-        if (!haveSecondKeyString) {
-            int val=getSecondDecryptionNumber();
-            secondKeyString= ""+
-                    val*3  +
-                    val    +
-                    val*4  +
-                    val*2  +
-                    val*5  +
-                    val*6  +
-                    val*8  +
-                    val*7;
-            debug("Second Key String", secondKeyString);
-            haveSecondKeyString=true;
-        }
-        return secondKeyString;
-    }
-    
-    private byte[] getPatternXorKey() {
-        if (!haveXorKey) {
-            String key=getSecondKeyString();
-            int val=getSecondDecryptionNumber();
-            xorKey=new byte[maxXorLength];
-            for (int i=0; i<maxXorLength; i++) {
-                int index=(((i+1)%key.length()));
-                byte temp1=(byte)key.charAt(index);
-                byte temp2=(byte)((val%(i+1))&0xff);
-                xorKey[i] = (byte)(temp1 ^ temp2);
-            }
-            haveXorKey=true;
-        }
-        return xorKey;
-    }
-    
-    private void initDataBlocks() {
+    protected void initDataBlocks(byte[] key) {
         if (!dataBlocksInitialized) {
             int startPos=0xf8;
-            byte[] key=getPatternXorKey();
-            D7CVarLenDataBlock nextBlock;
+            DAKVarLenDataBlock nextBlock;
             firstBlocks=new ArrayList<>();
             secondBlocks=new ArrayList<>();
             do {
-                nextBlock=new D7CVarLenDataBlock(data, startPos, key);
+                nextBlock=new DAKVarLenDataBlock(data, startPos, key);
                 firstBlocks.add(nextBlock);
                 if (debugging) {
                     System.out.println("Block at "+Integer.toHexString(startPos)+
@@ -219,7 +125,7 @@ public class DAKBlob {
                 startPos+=nextBlock.getNbytes()+4;
             } while (nextBlock.getHeight()!=this.getHeight());
             do {
-                nextBlock=new D7CVarLenDataBlock(data, startPos, key);
+                nextBlock=new DAKVarLenDataBlock(data, startPos, key);
                 secondBlocks.add(nextBlock);
                 if (debugging) {
                     System.out.println("Block at "+Integer.toHexString(startPos)+
@@ -230,20 +136,23 @@ public class DAKBlob {
                 }
                 startPos+=nextBlock.getNbytes()+4;
             } while (nextBlock.getHeight()!=this.getHeight());
-
             paletteStart=startPos;  debug("Palette starts at", paletteStart); startPos+=1775;
             paletteRemap=startPos;  debug("Palette remap  at", paletteRemap);
             dataBlocksInitialized=true;
         }
     }
-    
-    private void decodeRLEData(byte[] pixels, List<D7CVarLenDataBlock>blocks,
+
+    protected void decodeRLEData(byte[] pixels, List<DAKVarLenDataBlock>blocks,
             int height, int width, int remapStart) {
+        debug("height", height);
+        debug("width", width);
         int pixelRowStart=0;
         int blockno=0;
         int posInData=0;
         int posOutData=0;
         byte[] inputData=blocks.get(0).getData();
+        debug("pixels length",pixels.length);
+        debug("input length",inputData.length);
         for (int row=0; row<height; row++) {
             if (row==blocks.get(blockno).getHeight()) {
                 inputData=blocks.get(++blockno).getData();
@@ -267,22 +176,26 @@ public class DAKBlob {
         }
     }
     
-    public DAKColor getColor(int index) {
-        initDataBlocks();
-        return new D7CColor(data, paletteStart+index*25);
+    public byte[] getPatternXorKey() {
+        return null;
     }
     
-    public byte[] getDataBlock2Pixels() {
+    public DAKColor getColor(int index, byte[] key) {
+        initDataBlocks(key);
+        return new DAKColor(data, paletteStart+index*25);
+    }
+
+    public byte[] getDataBlock1Pixels(byte[] key) {
         byte[] pixels=new byte[getWidth()*getHeight()];
-        initDataBlocks();
-        decodeRLEData(pixels, secondBlocks, getHeight(), getWidth(), paletteRemap);
+        initDataBlocks(key);
+        decodeRLEData(pixels, firstBlocks, getHeight(), getWidth(), 0);
         return pixels;
     }
-    
-    public byte[] getDataBlock1Pixels() {
+
+    public byte[] getDataBlock2Pixels(byte[] key) {
         byte[] pixels=new byte[getWidth()*getHeight()];
-        initDataBlocks();
-        decodeRLEData(pixels, firstBlocks, getHeight(), getWidth(), 0);
+        initDataBlocks(key);
+        decodeRLEData(pixels, secondBlocks, getHeight(), getWidth(), paletteRemap);
         return pixels;
     }
 }
