@@ -4,4 +4,5 @@ dist
 nbproject
 /build/
 /__pycache__
+/py/__pycache__
 /data
