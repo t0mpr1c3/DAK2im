@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import os
 import sys
 import numpy as np
 from collections import Counter
@@ -83,7 +82,7 @@ class STPBlock:
 ## end of STPBlock class definition
 
 
-class DAKPatternConverter:
+class DAK2im:
 
 	def __init__(self, debug = True):
 		self.filename = None
@@ -100,7 +99,7 @@ class DAKPatternConverter:
 		# self.status = 0
 		self.debug = False
 
-	def read_data(self, filename):
+	def __read_data(self, filename):
 		self.__init__()
 		self.filename = filename
 		if self.debug:
@@ -115,13 +114,13 @@ class DAKPatternConverter:
 			print(f"input size {hex(size)} bytes")
 		return data
 
-	def check_header(self, header, ok_headers):
+	def __check_header(self, header, ok_headers):
 		if self.debug:
 			print(f"header {header}")
 		if header not in ok_headers:
 			self.exit("file header not recognized", -4)
 
-	def check_dims(self, data, w_pos, h_pos, w_max, h_max):
+	def __check_dims(self, data, w_pos, h_pos, w_max, h_max):
 		self.width = getWordAt(data, w_pos)
 		self.height = getWordAt(data, h_pos)
 		if self.debug:
@@ -131,7 +130,7 @@ class DAKPatternConverter:
 			print("dimensions are too big")
 			sys.exit(-2)
 
-	def find_col1(buffer, start):
+	def __find_col1(buffer, start):
 		pos = start
 		for i in range(0x47):
 			if buffer[pos] & 0x50 == 0x50:
@@ -141,7 +140,7 @@ class DAKPatternConverter:
 		return 0x20 ## default value for col1
 
 	## block of color data after pattern block = 1775 bytes = 0x47 * 0x19
-	def read_colors(self, buffer, start):
+	def __read_colors(self, buffer, start):
 		pos = start
 		for i in range(0x47):
 			b = buffer[pos:pos + 0x1A]
@@ -154,7 +153,7 @@ class DAKPatternConverter:
 					print(f"new_color '{chr(i)}' {new_color.string()}")
 			pos += 0x19
 
-	# def read_stitches(self, data, start):
+	# def __read_stitches(self, data, start):
 	# 	pos = start
 	# 	for i in range(0x30):
 	# 		k = data[pos + 1]
@@ -167,18 +166,31 @@ class DAKPatternConverter:
 	# 				print(f"new_stitch {new_stitch.string()}")
 	# 		pos += 2
 
-	def read_pat(self, filename):
+
+	def __output_png(self):
+		rgb = [[num for element in [self.colors[self.color_pattern[self.height - row - 1, column]].rgb \
+		for column in range(self.width)] for num in element] for row in range(self.height)]
+		return png.from_array(rgb, mode = 'RGB')
+
+	def __exit(self, msg, return_code):
+		print(msg)
+		# self.status = return_code
+		# sys.exit(self.status)
+		sys.exit(return_code)
+
+	# read DAK .pat file and return a PIL.Image object
+	def pat2png(self, filename):
 		## constants
 		dst_pos = 0x10
 		pattern_start = 0x165
 		#
 		## read data
-		input_data = self.read_data(filename)
+		input_data = self.__read_data(filename)
 		input_size = len(input_data)
 		#
 		## check data
-		self.check_header(input_data[0:3], (b'D4C', b'D6C'))
-		self.check_dims(input_data, 0x13A, 0x13C, 500, 800)
+		self.__check_header(input_data[0:3], (b'D4C', b'D6C'))
+		self.__check_dims(input_data, 0x13A, 0x13C, 500, 800)
 		# self.status = 0
 		#
 		## decode run length encoding of color pattern
@@ -243,7 +255,7 @@ class DAKPatternConverter:
 		if pos < input_size:
 			# if self.col1 == 0:
 				# self.col1 = find_col1(input_data, pos)
-			self.read_colors(input_data, pos)
+			self.__read_colors(input_data, pos)
 			#
 			## get additional information, 6 bytes per row
 			## I don't know what these data represent
@@ -282,13 +294,14 @@ class DAKPatternConverter:
 		## no information on stitch types
 		## done
 		# return self.status
-		return 0
+		return self.__output_png()
 
-	def read_stp(self, filename):
+	# read DAK .stp file and return a PIL.Image object
+	def stp2png(self, filename):
 
-		def calc_key(data):
+		def __calc_key(data):
 
-			def appendKeystring(next_string, max_size):
+			def __appendKeystring(next_string, max_size):
 				return (keystring + next_string)[0:max_size]
 
 			key1 = (getDWordAt(data, 0x35) >> 1)
@@ -301,12 +314,12 @@ class DAKPatternConverter:
 			salt1 = getWordAt(data, 0x39);
 			salt2 = int((getDWordAt(data, 0x35) & 0xFFFF) > 0)
 			keystring = getStringAt(data, 0x60)
-			keystring = appendKeystring(getStringAt(data, 0x41),    0x6E)
-			keystring = appendKeystring(str(getWordAt(data, 0x3D)), 0x7D) 
-			keystring = appendKeystring(str(getByteAt(data, 0x20)), 0x8C) 
-			keystring = appendKeystring(getStringAt(data, 0x41),    0xAA) 
-			keystring = appendKeystring(str(getByteAt(data, 0x20)), 0xB9) 
-			keystring = appendKeystring(str(getWordAt(data, 0x3D)), 0xC8)
+			keystring = __appendKeystring(getStringAt(data, 0x41),    0x6E)
+			keystring = __appendKeystring(str(getWordAt(data, 0x3D)), 0x7D) 
+			keystring = __appendKeystring(str(getByteAt(data, 0x20)), 0x8C) 
+			keystring = __appendKeystring(getStringAt(data, 0x41),    0xAA) 
+			keystring = __appendKeystring(str(getByteAt(data, 0x20)), 0xB9) 
+			keystring = __appendKeystring(str(getWordAt(data, 0x3D)), 0xC8)
 			if self.debug:
 				print(f"first key string '{keystring}'")
 			key2 = key1 
@@ -327,13 +340,13 @@ class DAKPatternConverter:
 			if self.debug:
 				print(f"second key number {key2}")
 			keystring = str(key2 * 3)
-			keystring = appendKeystring(str(key2),     0x1E)
-			keystring = appendKeystring(str(key2 * 4), 0x2D)
-			keystring = appendKeystring(str(key2 * 2), 0x3C)
-			keystring = appendKeystring(str(key2 * 5), 0x4B)
-			keystring = appendKeystring(str(key2 * 6), 0x5A)
-			keystring = appendKeystring(str(key2 * 8), 0x69)
-			keystring = appendKeystring(str(key2 * 7), 0x78)
+			keystring = __appendKeystring(str(key2),     0x1E)
+			keystring = __appendKeystring(str(key2 * 4), 0x2D)
+			keystring = __appendKeystring(str(key2 * 2), 0x3C)
+			keystring = __appendKeystring(str(key2 * 5), 0x4B)
+			keystring = __appendKeystring(str(key2 * 6), 0x5A)
+			keystring = __appendKeystring(str(key2 * 8), 0x69)
+			keystring = __appendKeystring(str(key2 * 7), 0x78)
 			if self.debug:
 				print(f"second key string '{keystring}'")
 			xorkey = bytearray(max_xor_len)
@@ -344,7 +357,7 @@ class DAKPatternConverter:
 				xorkey[i] = temp1 ^ temp2
 			return xorkey
 
-		def decrypt_next_block(pos):
+		def __decrypt_next_block(pos):
 			blocks = []
 			while True:
 				block = STPBlock(input_data, pos, xorkey)
@@ -354,7 +367,7 @@ class DAKPatternConverter:
 					return blocks, pos
 
 		# decode run length encoding of color and stitch patterns
-		def decode_runs(data, blocks, offset):
+		def __decode_runs(data, blocks, offset):
 			output = np.zeros((self.height, self.width), np.uint8)
 			block_num = 0
 			block_data = blocks[0].data
@@ -387,28 +400,28 @@ class DAKPatternConverter:
 		color_data_size = 1775 ## 71 colors * 25 bytes
 		#
 		## read data
-		input_data = self.read_data(filename)
+		input_data = self.__read_data(filename)
 		#
 		## check data
-		self.check_header(input_data[0:3], (b'D7c',))
-		self.check_dims(input_data, 3, 5, 500, 3000)
+		self.__check_header(input_data[0:3], (b'D7c',))
+		self.__check_dims(input_data, 3, 5, 500, 3000)
 		# self.status = 0
 		#
 		## calculate key for decryption
-		xorkey = calc_key(input_data)
+		xorkey = __calc_key(input_data)
 		#
 		## decrypt data blocks
-		color_blocks, stitch_block_start = decrypt_next_block(color_block_start)
-		stitch_blocks, color_data_start = decrypt_next_block(stitch_block_start)
+		color_blocks, stitch_block_start = __decrypt_next_block(color_block_start)
+		stitch_blocks, color_data_start = __decrypt_next_block(stitch_block_start)
 		# stitch_data_start = color_data_start + color_data_size
 		if self.debug:
 			print(f"start of color data {hex(color_data_start)}")
 			# print(f"start of stitch data {hex(stitch_data_start)}")
 		#
 		## get pattern, color, and stitch data
-		self.color_pattern = decode_runs(input_data, color_blocks, 0)
+		self.color_pattern = __decode_runs(input_data, color_blocks, 0)
 		# self.stitch_pattern = decode_runs(input_data, stitch_blocks, color_data_size)
-		self.read_colors(input_data, color_data_start)
+		self.__read_colors(input_data, color_data_start)
 		# self.read_stitches(input_data, stitch_data_start)
 		# if self.debug:
 			# print(input_data[stitch_data_start:stitch_data_start+0x100])
@@ -416,33 +429,7 @@ class DAKPatternConverter:
 		#
 		## done
 		# return self.status
-		return 0
-
-	def write_png(self, output_filename = None):
-		if output_filename == None:
-			output_filename = os.path.splitext(self.filename)[0] + ".png"
-			if self.debug:
-				print(f"output_filename {output_filename}")
-		try:
-			file = open(output_filename, "wb")
-		except Exception as ex:
-			self.exit(ex, -3)
-		writer = png.Writer(self.width, self.height, greyscale=False, bitdepth=8)
-		rgb = [[num for element in [self.colors[self.color_pattern[self.height - row - 1, column]].rgb \
-		for column in range(self.width)] for num in element] for row in range(self.height)]
-		try:
-			writer.write(file, rgb)
-		except Exception as ex:
-			file.close()
-			self.exit(ex, -3)
-		file.close()
-		return 0
-
-	def exit(self, msg, return_code):
-		print(msg)
-		# self.status = return_code
-		# sys.exit(self.status)
-		sys.exit(return_code)
+		return self.__output_png()
 
 # end of DAKPatternConverter class definition
 
@@ -455,14 +442,19 @@ if __name__ == "__main__":
 		print("too many arguments")
 		sys.exit(-3)
 	else:
-		p = DAKPatternConverter(debug=True)
+		p = DAK2im(debug=True)
 		filename = sys.argv[1]
 		suffix = filename[-4:].lower()
 		if suffix == ".pat":
-			p.read_pat(filename)
+			im = p.pat2png(filename)
 		elif suffix == ".stp":
-			p.read_stp(filename)
+			im = p.stp2png(filename)
 		else:
-			print(suffix)
-			p.exit("file suffix not recognized", -3)
-		p.write_png()
+			print("file suffix not recognized")
+			sys.exit(-3)
+		outfile = filename[:-4] + ".png"
+		try:
+			im.save(outfile)
+		except:
+			print("failed to save .png file")
+			sys.exit(-3)

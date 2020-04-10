@@ -1,4 +1,4 @@
-# DAKReader
+# DAK2im
 
 This is a small Python3 program used to explore the contents of Designaknit .stp and .pat files, which are used for knitting patterns. The code for .stp files was originally written in Java by Guntram Blohm in response to a stackexchange question (https://reverseengineering.stackexchange.com/questions/12235/reading-stp-designaknit-stitch-pattern-files-ii/12239#12239).
 
@@ -15,4 +15,6 @@ Two further types of information are ignored, for the current purposes:
 * stitch pattern
 * stitch types
 
-The __main__() method demonstrates the DAKReader class by opening a .pat or .stp file and writing the color pattern to a .png file.
+The two public methods are pat2im() and stp2im(). They take as their argument a filename and return a PIL.Image object. 
+
+The \_\_main\_\_() method demonstrates the DAK2im class by opening a .pat or .stp file and writing the color pattern to a .png file.
