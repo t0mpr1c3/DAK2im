@@ -432,29 +432,3 @@ class DAK2im:
 		return self.__output_png()
 
 # end of DAKPatternConverter class definition
-
-
-# if __name__ == "__main__":
-# 	if len(sys.argv) < 2:
-# 		print("filename argument required")
-# 		sys.exit(-3)
-# 	elif len(sys.argv) > 2:
-# 		print("too many arguments")
-# 		sys.exit(-3)
-# 	else:
-# 		p = DAK2im(debug=True)
-# 		filename = sys.argv[1]
-# 		suffix = filename[-4:].lower()
-# 		if suffix == ".pat":
-# 			im = p.pat2png(filename)
-# 		elif suffix == ".stp":
-# 			im = p.stp2png(filename)
-# 		else:
-# 			print("file suffix not recognized")
-# 			sys.exit(-3)
-# 		outfile = filename[:-4] + ".png"
-# 		try:
-# 			im.save(outfile)
-# 		except:
-# 			print("failed to save .png file")
-# 			sys.exit(-3)
