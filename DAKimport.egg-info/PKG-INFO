@@ -1,0 +1,33 @@
+Metadata-Version: 2.1
+Name: DAKimport
+Version: 0.0.3
+Summary: convert Designaknit .stp and .pat knitting pattern files into images
+Home-page: https://github.com/t0mpr1c3/DAKimport
+Author: Tom Price
+Author-email: t0mpr1c3@gmail.com
+License: UNKNOWN
+Description: # DAK2im
+        
+        This is a small Python3 module to convert Designaknit .stp and .pat knitting pattern files into images. The code for .stp files was originally written in Java by Guntram Blohm in response to a stackexchange question (https://reverseengineering.stackexchange.com/questions/12235/reading-stp-designaknit-stitch-pattern-files-ii/12239#12239).
+        
+        As .stp files are somewhat encrypted, it's not easily possible to read or convert them to anything else. 
+        The original intention of this software was to show how to read and decrypt those files. The older .pat file format is similar but without any encryption.
+        
+        The program reads two kinds of data from the files:
+        
+        * color pattern
+        * color palette
+        
+        Two further types of information are ignored, for the current purposes:
+        
+        * stitch pattern
+        * stitch types
+        
+        The two public methods are pat2im() and stp2im(). They take as their argument a filename and return a PIL.Image object. 
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.5
+Description-Content-Type: text/markdown

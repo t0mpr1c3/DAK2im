@@ -4,7 +4,7 @@ import sys
 import numpy as np
 from collections import Counter
 from PIL import Image
-import png
+# import png
 
 
 def signExt_b2d(x):
@@ -85,7 +85,7 @@ class STPBlock:
 ## end of STPBlock class definition
 
 
-class DAK2im:
+class Importer:
 
 	def __init__(self, debug = True):
 		self.filename = None
@@ -170,10 +170,18 @@ class DAK2im:
 	# 		pos += 2
 
 
-	def __output_png(self):
-		rgb = [[num for element in [self.colors[self.color_pattern[self.height - row - 1, column]].rgb \
-		for column in range(self.width)] for num in element] for row in range(self.height)]
-		return png.from_array(rgb, mode = 'RGB')
+	# def __output_png(self):
+	# 	rgb = [[num for element in [self.colors[self.color_pattern[self.height - row - 1, column]].rgb \
+	# 	for column in range(self.width)] for num in element] for row in range(self.height)]
+	# 	return png.from_array(rgb, mode = 'RGB')
+
+	def __output_im(self):
+		rgb = np.array([[self.colors[self.color_pattern[self.height - row - 1, column]].rgb \
+		for column in range(self.width)] for row in range(self.height)],
+		np.uint8)
+		if self.debug:
+			print(rgb, file=sys.stderr)
+		return Image.fromarray(rgb, mode = 'RGB')
 
 	def __exit(self, msg, return_code):
 		print(msg)
@@ -182,7 +190,7 @@ class DAK2im:
 		sys.exit(return_code)
 
 	# read DAK .pat file and return a PIL.Image object
-	def pat2png(self, filename):
+	def pat2im(self, filename):
 		## constants
 		dst_pos = 0x10
 		pattern_start = 0x165
@@ -297,10 +305,10 @@ class DAK2im:
 		## no information on stitch types
 		## done
 		# return self.status
-		return self.__output_png()
+		return self.__output_im()
 
 	# read DAK .stp file and return a PIL.Image object
-	def stp2png(self, filename):
+	def stp2im(self, filename):
 
 		def __calc_key(data):
 
@@ -432,6 +440,6 @@ class DAK2im:
 		#
 		## done
 		# return self.status
-		return self.__output_png()
+		return self.__output_im()
 
 # end of DAKPatternConverter class definition

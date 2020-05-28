@@ -16,5 +16,3 @@ Two further types of information are ignored, for the current purposes:
 * stitch types
 
 The two public methods are pat2im() and stp2im(). They take as their argument a filename and return a PIL.Image object. 
-
-The \_\_main\_\_() method (now commented out) 	demonstrates the DAK2im class by opening a .pat or .stp file and writing the color pattern to a .png file.
