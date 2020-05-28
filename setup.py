@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="DAK2im",
-    version="0.1.0",
+    version="0.1.1",
     packages=setuptools.find_packages(),
     install_requires=["numpy>=1.18.4", "Pillow>=7.1.2", "pypng>=0.0.20"],
     python_requires='>=3.5',

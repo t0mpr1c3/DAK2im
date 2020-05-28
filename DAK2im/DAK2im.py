@@ -43,7 +43,9 @@ class DAKColor:
 			self.rgb = bytearray([r, g, b])
 
 	def string(self):
-		return f"{hex(self.code)}, {str(self.n)}, '{chr(self.symbol)}', '{self.name}', {hex(int.from_bytes(self.rgb, 'big'))}"
+		return ("{0}, {1}, '{2}', '{3}', {4}") \
+		.format(hex(self.code), str(self.n), chr(self.symbol), self.name,
+			hex(int.from_bytes(self.rgb, 'big')))
 
 ## end of DAKColor class definition
 
@@ -61,8 +63,9 @@ class DAKStitch:
 		self.e = e
 
 	def string(self):
-		return f"{hex(self.i)}, {hex(self.j)}, {hex(self.k)}, " + \
-		f"{hex(self.a)}, {hex(self.b)}, {hex(self.c)}, {hex(self.d)}, {hex(self.e)}"
+		return ("{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}") \
+		.format(hex(self.i), hex(self.j), hex(self.k), hex(self.a), hex(self.b),
+			hex(self.c), hex(self.d), hex(self.e))
 
 ## end of DAKStitch class definition
 
@@ -103,7 +106,7 @@ class DAK2im:
 		self.__init__()
 		self.filename = filename
 		if self.debug:
-			print(f"filename {self.filename}")
+			print("filename {}".format(self.filename))
 		file = open(self.filename, "rb")
 		if file is None:
 			self.exit("file not found", -3)
@@ -111,12 +114,12 @@ class DAK2im:
 		file.close()
 		size = len(data)
 		if self.debug:
-			print(f"input size {hex(size)} bytes")
+			print("input size {} bytes".format(hex(size)))
 		return data
 
 	def __check_header(self, header, ok_headers):
 		if self.debug:
-			print(f"header {header}")
+			print("header {}".format(header))
 		if header not in ok_headers:
 			self.exit("file header not recognized", -4)
 
@@ -124,8 +127,8 @@ class DAK2im:
 		self.width = getWordAt(data, w_pos)
 		self.height = getWordAt(data, h_pos)
 		if self.debug:
-			print(f"width {self.width}")
-			print(f"height {self.height}")
+			print("width {}".format(self.width))
+			print("height {}".format(self.height))
 		if self.width > w_max or self.height > h_max:
 			print("dimensions are too big")
 			sys.exit(-2)
@@ -150,7 +153,7 @@ class DAK2im:
 				# self.colors[b[1]] = new_color ## works for .pat file
 				self.colors[i] = new_color ## works for .stp file
 				if self.debug:
-					print(f"new_color '{chr(i)}' {new_color.string()}")
+					print("new_color '{}' {}".format(chr(i), new_color.string()))
 			pos += 0x19
 
 	# def __read_stitches(self, data, start):
@@ -248,7 +251,7 @@ class DAK2im:
 			pos += getByteAt(input_data, pos) + 1
 			pos += getByteAt(input_data, pos) + 3
 		if self.debug:
-			print(f"pos {hex(pos)}")
+			print("pos {}".format(hex(pos)))
 		#
 		## get color information
 		## block of color data after pattern block = 1775 bytes = 0x47 * 0x19
@@ -287,7 +290,7 @@ class DAK2im:
 						getByteAt(input_data, 0x105 + pos))
 					self.colors[i] = new_color
 					if self.debug:
-						print(f"new_color {new_color.string()}")
+						print("new_color {}".format(new_color.string()))
 		# if self.debug:
 			# print(f"col1 {hex(self.col1)}")
 		#
@@ -310,7 +313,7 @@ class DAK2im:
 			key1 += getWordAt(data, 0x3D)
 			key1 += getByteAt(data, 0x20);
 			if self.debug:
-				print(f"first key number {key1}")
+				print("first key number {}".format(key1))
 			salt1 = getWordAt(data, 0x39);
 			salt2 = int((getDWordAt(data, 0x35) & 0xFFFF) > 0)
 			keystring = getStringAt(data, 0x60)
@@ -321,7 +324,7 @@ class DAK2im:
 			keystring = __appendKeystring(str(getByteAt(data, 0x20)), 0xB9) 
 			keystring = __appendKeystring(str(getWordAt(data, 0x3D)), 0xC8)
 			if self.debug:
-				print(f"first key string '{keystring}'")
+				print("first key string '{}'".format(keystring))
 			key2 = key1 
 			for i in range(len(keystring)):
 				b = ord(keystring[i]) // 2
@@ -338,7 +341,7 @@ class DAK2im:
 					key2 += (i + 1) * salt1;
 					key2 += b * 4;
 			if self.debug:
-				print(f"second key number {key2}")
+				print("second key number {}".format(key2))
 			keystring = str(key2 * 3)
 			keystring = __appendKeystring(str(key2),     0x1E)
 			keystring = __appendKeystring(str(key2 * 4), 0x2D)
@@ -348,7 +351,7 @@ class DAK2im:
 			keystring = __appendKeystring(str(key2 * 8), 0x69)
 			keystring = __appendKeystring(str(key2 * 7), 0x78)
 			if self.debug:
-				print(f"second key string '{keystring}'")
+				print("second key string '{}'".format(keystring))
 			xorkey = bytearray(max_xor_len)
 			for i in range(max_xor_len):
 				index = (i + 1) % len(keystring)
@@ -415,8 +418,8 @@ class DAK2im:
 		stitch_blocks, color_data_start = __decrypt_next_block(stitch_block_start)
 		# stitch_data_start = color_data_start + color_data_size
 		if self.debug:
-			print(f"start of color data {hex(color_data_start)}")
-			# print(f"start of stitch data {hex(stitch_data_start)}")
+			print("start of color data {}".format(hex(color_data_start)))
+			# print("start of stitch data {}".format(hex(stitch_data_start)))
 		#
 		## get pattern, color, and stitch data
 		self.color_pattern = __decode_runs(input_data, color_blocks, 0)
