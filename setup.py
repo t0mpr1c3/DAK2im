@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="DAKimport",
-    version="0.0.3",
+    version="0.0.4",
     packages=setuptools.find_packages(),
     install_requires=["numpy>=1.18.4", "Pillow>=7.1.2", "pypng>=0.0.20"],
     python_requires='>=3.5',
