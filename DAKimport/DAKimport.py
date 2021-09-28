@@ -85,7 +85,7 @@ class STPBlock:
 ## end of STPBlock class definition
 
 
-class Importer:
+class DAKPatternConverter:
 
 	def __init__(self, debug = True):
 		self.filename = None
