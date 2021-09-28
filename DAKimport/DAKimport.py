@@ -109,7 +109,7 @@ class DAKPatternConverter:
 			print("filename {}".format(self.filename))
 		file = open(self.filename, "rb")
 		if file is None:
-			self.exit("file not found", -3)
+			self.__exit("file not found", -3)
 		data = file.read()
 		file.close()
 		size = len(data)
@@ -121,7 +121,7 @@ class DAKPatternConverter:
 		if self.debug:
 			print("header {}".format(header))
 		if header not in ok_headers:
-			self.exit("file header not recognized", -4)
+			self.__exit("file header not recognized", -4)
 
 	def __check_dims(self, data, w_pos, h_pos, w_max, h_max):
 		self.width = getWordAt(data, w_pos)
@@ -130,8 +130,7 @@ class DAKPatternConverter:
 			print("width {}".format(self.width))
 			print("height {}".format(self.height))
 		if self.width > w_max or self.height > h_max:
-			print("dimensions are too big")
-			sys.exit(-2)
+			self.__exit("dimensions are too big", -2)
 
 	def __find_col1(buffer, start):
 		pos = start
