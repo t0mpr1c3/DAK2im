@@ -3,6 +3,5 @@ manifest.mf
 dist
 nbproject
 /build/
-/DAK2im/__pycache__
-/DAK2im/py/__pycache__
-/DAK2im/data
+**/__pycache__
+**/data
